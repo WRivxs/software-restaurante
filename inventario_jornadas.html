@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buen Provecho — Inventario Prototipo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-page: #050505;
+            --bg-surface: #0f0f0f;
+            --bg-card: #151515;
+            --brand-yellow: #FFC107;
+            --brand-orange: #FF5722;
+            --text-main: #e0e0e0;
+            --text-muted: #555;
+            --border-ui: rgba(255,255,255,0.06);
+            --radius: 10px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg-page); color: var(--text-main); font-family: 'Outfit', sans-serif; }
+
+        /* ── HEADER ── */
+        .header { height: 68px; background: #000; border-bottom: 1px solid var(--border-ui); padding: 0 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 200; }
+        .logo h1 { font-weight: 900; text-transform: uppercase; font-style: italic; letter-spacing: -1px; line-height: 1; }
+        .logo h1 .w { color: white; font-size: 22px; }
+        .logo h1 .y { color: var(--brand-yellow); font-size: 17px; }
+        .logo sub { color: var(--brand-orange); font-size: 9px; font-weight: 900; letter-spacing: 3px; text-transform: uppercase; display: block; margin-top: 3px; }
+        .nav-tabs { display: flex; background: rgba(255,255,255,0.03); padding: 4px; border-radius: 12px; border: 1px solid var(--border-ui); gap: 3px; }
+        .nav-tab { padding: 8px 18px; border-radius: 8px; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; color: var(--text-muted); border: none; background: transparent; font-family: inherit; transition: all 0.2s; }
+        .nav-tab.active { background: var(--brand-yellow); color: #000; }
+
+        /* ── LAYOUT ── */
+        .container { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+        .section { display: none; animation: fadeUp 0.35s ease; }
+        .section.active { display: block; }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(8px);} to { opacity:1; transform:translateY(0);} }
+        .page-title { font-size: 22px; font-weight: 900; margin-bottom: 4px; }
+        .page-desc { color: var(--text-muted); font-size: 13px; margin-bottom: 28px; }
+
+        /* ── BOTONES ── */
+        .btn { background: var(--brand-yellow); color: #000; font-weight: 900; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; padding: 11px 20px; border-radius: var(--radius); border: none; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; }
+        .btn:hover { box-shadow: 0 4px 20px rgba(255,193,7,0.25); transform: translateY(-1px); }
+        .btn-sm { padding: 7px 14px; font-size: 10px; }
+        .btn-ghost { background: transparent; border: 1px solid var(--border-ui); color: var(--text-main); }
+        .btn-ghost:hover { background: rgba(255,255,255,0.04); box-shadow: none; }
+        .btn-danger { background: transparent; border: 1px solid rgba(255,87,34,0.3); color: var(--brand-orange); }
+        .btn-danger:hover { background: rgba(255,87,34,0.08); box-shadow: none; }
+
+        /* ── CARDS / FORM ── */
+        .card { background: var(--bg-surface); border: 1px solid var(--border-ui); border-radius: 14px; padding: 24px; margin-bottom: 24px; }
+        .card-bordered { border-color: var(--brand-yellow); position: relative; overflow: hidden; }
+        .card-bordered::after { content:''; position:absolute; top:0; left:0; right:0; height:1px; background: linear-gradient(90deg, transparent, var(--brand-yellow), transparent); }
+        .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 28px; }
+        .kpi { background: var(--bg-surface); border: 1px solid var(--border-ui); border-radius: var(--radius); padding: 20px 18px; }
+        .kpi-label { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); margin-bottom: 8px; }
+        .kpi-val { font-size: 26px; font-weight: 900; }
+
+        /* ── TABLA INVENTARIO ── */
+        .inv-table { width: 100%; border-collapse: separate; border-spacing: 0 7px; }
+        .inv-table thead th { padding: 0 14px 8px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); text-align: left; }
+        .inv-row td { padding: 14px; background: rgba(255,255,255,0.02); border: 1px solid transparent; border-left: none; border-right: none; transition: background 0.18s; }
+        .inv-row td:first-child { border-radius: var(--radius) 0 0 var(--radius); border-left: 1px solid rgba(255,255,255,0.04); padding-left: 18px; }
+        .inv-row td:last-child { border-radius: 0 var(--radius) var(--radius) 0; border-right: 1px solid rgba(255,255,255,0.04); }
+        .inv-row:hover td { background: rgba(255,255,255,0.04); }
+        .qty-input { background: #000; border: 1px solid #2a2a2a; color: white; width: 80px; padding: 8px; border-radius: 7px; text-align: center; font-family: inherit; font-size: 14px; font-weight: 700; transition: border 0.2s; }
+        .qty-input:focus { border-color: var(--brand-yellow); outline: none; }
+
+        /* ── BADGES ESTADO ── */
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
+        .badge-ok { background: rgba(76,175,80,0.12); color: #4CAF50; border: 1px solid rgba(76,175,80,0.2); }
+        .badge-alert { background: rgba(255,87,34,0.12); color: var(--brand-orange); border: 1px solid rgba(255,87,34,0.2); }
+        .badge-warn { background: rgba(255,193,7,0.1); color: var(--brand-yellow); border: 1px solid rgba(255,193,7,0.2); }
+        .diff-ok { color: #555; font-size: 12px; font-weight: 600; }
+        .diff-neg { color: var(--brand-orange); font-size: 12px; font-weight: 700; }
+        .diff-pos { color: #4CAF50; font-size: 12px; font-weight: 700; }
+
+        /* ── HISTORY CARDS ── */
+        .history-card { background: var(--bg-surface); border: 1px solid var(--border-ui); border-radius: var(--radius); padding: 18px 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 10px; transition: all 0.2s; }
+        .history-card:hover { border-color: #2a2a2a; transform: translateX(4px); }
+        .history-date { color: var(--brand-yellow); font-weight: 900; font-size: 14px; min-width: 110px; }
+        .history-meta { flex: 1; font-size: 11px; color: var(--text-muted); }
+
+        /* ── MODAL ── */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 500; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.open { display: flex; animation: fadeUp 0.3s ease; }
+        .modal-box { background: #0d0d0d; border: 1px solid #2a2a2a; border-radius: 16px; width: 100%; max-width: 680px; max-height: 88vh; overflow-y: auto; padding: 28px; }
+        .modal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+        .modal-title { font-size: 16px; font-weight: 900; }
+        .modal-title sub { display: block; color: var(--text-muted); font-size: 11px; font-weight: 400; letter-spacing: 0; margin-top: 3px; }
+        .close-btn { background: none; border: none; color: #555; cursor: pointer; font-size: 22px; line-height: 1; padding: 0; }
+        .close-btn:hover { color: white; }
+
+        /* ── SEPARADOR ── */
+        hr { border: none; border-top: 1px solid var(--border-ui); margin: 20px 0; }
+
+        /* ── MAESTRO INSUMOS ── */
+        .insumo-item { background: rgba(255,255,255,0.02); border: 1px solid var(--border-ui); border-radius: var(--radius); padding: 16px 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; transition: background 0.2s; }
+        .insumo-item:hover { background: rgba(255,255,255,0.04); }
+
+        /* ── NOTICE ── */
+        .notice { background: rgba(255,193,7,0.07); border: 1px solid rgba(255,193,7,0.2); color: var(--brand-yellow); padding: 14px 18px; border-radius: var(--radius); font-size: 12px; font-weight: 600; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+
+        /* ── TOAST ── */
+        .toast { position: fixed; bottom: 28px; right: 28px; background: #1a3020; border: 1px solid #4CAF50; color: #4CAF50; padding: 14px 22px; border-radius: var(--radius); font-size: 13px; font-weight: 700; z-index: 999; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* ── DETAIL TABLE ── */
+        .det-row { display: grid; grid-template-columns: 1fr 80px 80px 80px 100px; gap: 8px; align-items: center; padding: 12px 14px; border-radius: 8px; background: rgba(255,255,255,0.02); margin-bottom: 6px; font-size: 13px; }
+        .det-head { font-size: 10px; font-weight: 900; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; padding: 6px 14px; margin-bottom: 4px; }
+        .ta-c { text-align: center; }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <div class="logo">
+        <h1><span class="w">Buen</span><span class="y"> Provecho</span></h1>
+        <sub>Control de Inventario · Prototipo v2</sub>
+    </div>
+    <div class="nav-tabs">
+        <button class="nav-tab active" onclick="setTab('jornada', this)">Jornada Diaria</button>
+        <button class="nav-tab" onclick="setTab('historial', this)">Historial</button>
+        <button class="nav-tab" onclick="setTab('insumos', this)">Maestro Insumos</button>
+    </div>
+    <div style="font-size:10px; color:#333; font-weight:900; text-transform:uppercase;">Admin: María</div>
+</header>
+
+<div class="container">
+
+    <!-- ══ JORNADA DIARIA ══ -->
+    <div id="section-jornada" class="section active">
+        <h2 class="page-title">Jornada del Día</h2>
+        <p class="page-desc">Registra cuántas unidades tienes al inicio y al final del turno para detectar discrepancias.</p>
+
+        <div class="notice">
+            💡 <span>Ingresa las cantidades de apertura y cierre. Al guardar, el sistema calcula el consumo y lo archiva en el historial.</span>
+        </div>
+
+        <div class="kpi-row">
+            <div class="kpi"><div class="kpi-label">Fecha de Jornada</div><div class="kpi-val" id="kpi-fecha" style="font-size:16px; color:white; margin-top:4px;">—</div></div>
+            <div class="kpi"><div class="kpi-label">Insumos Monitoreados</div><div class="kpi-val" id="kpi-count" style="color:var(--brand-yellow)">0</div></div>
+            <div class="kpi"><div class="kpi-label">Con Discrepancia</div><div class="kpi-val" id="kpi-disc" style="color:var(--brand-orange)">0</div></div>
+        </div>
+
+        <div class="card card-bordered">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:22px; flex-wrap:wrap; gap:12px;">
+                <div>
+                    <h3 style="font-weight:900; font-size:14px; text-transform:uppercase; font-style:italic;">Registro en Curso</h3>
+                    <p style="font-size:11px; color:var(--text-muted); margin-top:2px;">Edita los campos de apertura y cierre para cada insumo</p>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-ghost btn-sm" onclick="resetJornada()">↺ Limpiar</button>
+                    <button class="btn" onclick="guardarJornada()">Finalizar y Guardar Auditoría</button>
+                </div>
+            </div>
+
+            <table class="inv-table">
+                <thead>
+                    <tr>
+                        <th>Insumo</th>
+                        <th class="ta-c">Apertura</th>
+                        <th class="ta-c">Cierre (Físico)</th>
+                        <th class="ta-c">Consumo</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="jornada-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ══ HISTORIAL ══ -->
+    <div id="section-historial" class="section">
+        <h2 class="page-title">Historial de Auditorías</h2>
+        <p class="page-desc">Todas las jornadas guardadas. Haz clic en "Ver Detalle" para revisar cada registro.</p>
+        <div id="historial-list"><p style="color:#333; font-style:italic; text-align:center; padding: 60px;">No hay jornadas guardadas aún. Finaliza una auditoría para verla aquí.</p></div>
+    </div>
+
+    <!-- ══ MAESTRO INSUMOS ══ -->
+    <div id="section-insumos" class="section">
+        <h2 class="page-title">Maestro de Insumos</h2>
+        <p class="page-desc">Agrega o elimina los productos que quieres monitorear diariamente.</p>
+
+        <div class="card card-bordered" style="max-width:480px;">
+            <h3 style="font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--brand-yellow); margin-bottom:18px;">Nuevo Insumo</h3>
+            <div style="display:grid; gap:12px;">
+                <div>
+                    <label style="font-size:10px; color:#555; text-transform:uppercase; display:block; margin-bottom:6px;">Nombre del Insumo</label>
+                    <input type="text" id="n-nombre" placeholder="Ej. Arepas de Maíz" style="width:100%; background:#000; border:1px solid #2a2a2a; color:white; padding:12px; border-radius:8px; font-family:inherit; font-size:13px;">
+                </div>
+                <div>
+                    <label style="font-size:10px; color:#555; text-transform:uppercase; display:block; margin-bottom:6px;">Unidad de Medida</label>
+                    <select id="n-unidad" style="width:100%; background:#000; border:1px solid #2a2a2a; color:white; padding:12px; border-radius:8px; font-family:inherit; font-size:13px;">
+                        <option value="und">Unidades (und)</option>
+                        <option value="kg">Kilogramos (kg)</option>
+                        <option value="paq">Paquetes (paq)</option>
+                        <option value="bolsa">Bolsas</option>
+                        <option value="lt">Litros (lt)</option>
+                        <option value="rollo">Rollos</option>
+                    </select>
+                </div>
+                <button class="btn" style="width:100%; justify-content:center;" onclick="addInsumo()">+ Agregar al Catálogo</button>
+            </div>
+        </div>
+
+        <div id="master-list"></div>
+    </div>
+
+</div>
+
+<!-- ══ MODAL DETALLE ══ -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOutside(event)">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title">
+                Detalle de Auditoría
+                <sub id="modal-fecha">—</sub>
+            </div>
+            <button class="close-btn" onclick="closeModal()">×</button>
+        </div>
+
+        <!-- KPIs del modal -->
+        <div class="kpi-row" id="modal-kpis" style="margin-bottom:20px;"></div>
+
+        <hr>
+
+        <!-- Tabla de detalle -->
+        <div class="det-head" style="display:grid; grid-template-columns:1fr 80px 80px 80px 100px; gap:8px; padding:6px 14px; margin-bottom:4px;">
+            <span>Insumo</span>
+            <span class="ta-c">Apertura</span>
+            <span class="ta-c">Cierre</span>
+            <span class="ta-c">Consumo</span>
+            <span>Estado</span>
+        </div>
+        <div id="modal-body"></div>
+
+        <hr>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
+            <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ─── ESTADO GLOBAL ───
+    let INSUMOS = [
+        { id: 1, nombre: 'Arepas de Maíz', unidad: 'und' },
+        { id: 2, nombre: 'Gaseosas 350ml', unidad: 'und' },
+        { id: 3, nombre: 'Carbón Vegetal', unidad: 'bolsa' },
+        { id: 4, nombre: 'Bolsas Kraft', unidad: 'und' },
+        { id: 5, nombre: 'Servilletas', unidad: 'paq' }
+    ];
+
+    let HISTORIAL = []; // Auditorías guardadas
+
+    // ─── FECHA HOY ───
+    function hoy() { return new Date().toISOString().slice(0,10); }
+    function formatFecha(f) {
+        const [y,m,d] = f.split('-');
+        const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        return `${d} ${meses[parseInt(m)-1]} ${y}`;
+    }
+
+    // ─── RENDER JORNADA ───
+    function renderJornada() {
+        const body = document.getElementById('jornada-body');
+        document.getElementById('kpi-fecha').textContent = formatFecha(hoy());
+        document.getElementById('kpi-count').textContent = INSUMOS.length;
+
+        if (INSUMOS.length === 0) {
+            body.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:40px; color:#333; font-style:italic;">No hay insumos registrados. Ve a "Maestro Insumos" para agregar.</td></tr>`;
+            document.getElementById('kpi-disc').textContent = '0';
+            return;
+        }
+
+        body.innerHTML = INSUMOS.map((ins, i) => `
+            <tr class="inv-row">
+                <td>
+                    <div style="font-weight:700; color:white;">${ins.nombre}</div>
+                    <div style="font-size:10px; color:#444; margin-top:2px;">${ins.unidad}</div>
+                </td>
+                <td class="ta-c">
+                    <input class="qty-input" type="number" id="ap-${i}" value="0" min="0" oninput="recalcRow(${i})">
+                </td>
+                <td class="ta-c">
+                    <input class="qty-input" type="number" id="ci-${i}" value="0" min="0" oninput="recalcRow(${i})">
+                </td>
+                <td class="ta-c" id="consumo-${i}" style="font-weight:700; color:#888;">0</td>
+                <td id="estado-${i}"><span class="diff-ok">—</span></td>
+            </tr>
+        `).join('');
+
+        updateKpiDisc();
+    }
+
+    function recalcRow(i) {
+        const ap = parseInt(document.getElementById(`ap-${i}`)?.value) || 0;
+        const ci = parseInt(document.getElementById(`ci-${i}`)?.value) || 0;
+        const consumo = ap - ci;
+        const el = document.getElementById(`consumo-${i}`);
+        const est = document.getElementById(`estado-${i}`);
+        if (el) el.textContent = consumo;
+        if (est) {
+            if (consumo < 0) {
+                est.innerHTML = `<span class="diff-pos">+${Math.abs(consumo)} sobrante</span>`;
+            } else if (consumo > ap * 1.5 && ap > 0) {
+                est.innerHTML = `<span class="diff-neg">⚠️ Alto consumo</span>`;
+            } else {
+                est.innerHTML = `<span class="diff-ok">✓ Normal</span>`;
+            }
+        }
+        updateKpiDisc();
+    }
+
+    function updateKpiDisc() {
+        let disc = 0;
+        INSUMOS.forEach((_, i) => {
+            const ap = parseInt(document.getElementById(`ap-${i}`)?.value) || 0;
+            const ci = parseInt(document.getElementById(`ci-${i}`)?.value) || 0;
+            const consumo = ap - ci;
+            if (consumo < 0) disc++;
+        });
+        document.getElementById('kpi-disc').textContent = disc;
+    }
+
+    function resetJornada() {
+        renderJornada();
+        showToast('Formulario limpiado', '#FFC107', '#332800');
+    }
+
+    // ─── GUARDAR JORNADA ───
+    function guardarJornada() {
+        if (INSUMOS.length === 0) { alert('No hay insumos para guardar.'); return; }
+
+        const items = INSUMOS.map((ins, i) => {
+            const ap = parseInt(document.getElementById(`ap-${i}`)?.value) || 0;
+            const ci = parseInt(document.getElementById(`ci-${i}`)?.value) || 0;
+            return { nombre: ins.nombre, unidad: ins.unidad, apertura: ap, cierre: ci, consumo: ap - ci };
+        });
+
+        const totalConsumo = items.reduce((s, it) => s + Math.max(0, it.consumo), 0);
+        const discrepancias = items.filter(it => it.cierre > it.apertura).length;
+        const masConsumido = items.reduce((a, b) => (b.consumo > a.consumo ? b : a), items[0]);
+
+        const jornada = {
+            id: Date.now(),
+            fecha: hoy(),
+            items,
+            totalConsumo,
+            discrepancias,
+            masConsumido: masConsumido?.nombre || '—',
+            estado: discrepancias > 0 ? 'alert' : 'ok'
+        };
+
+        HISTORIAL.unshift(jornada);
+        renderHistorial();
+        renderJornada();
+        showToast('✓ Auditoría guardada correctamente');
+    }
+
+    // ─── RENDER HISTORIAL ───
+    function renderHistorial() {
+        const el = document.getElementById('historial-list');
+        if (HISTORIAL.length === 0) {
+            el.innerHTML = `<p style="color:#333; font-style:italic; text-align:center; padding:60px;">No hay jornadas guardadas aún.</p>`;
+            return;
+        }
+        el.innerHTML = HISTORIAL.map(j => `
+            <div class="history-card">
+                <div class="history-date">${formatFecha(j.fecha)}</div>
+                <div class="history-meta">
+                    ${j.items.length} insumos · Consumo total: <strong style="color:white">${j.totalConsumo}</strong> unidades
+                    ${j.discrepancias > 0 ? ` · <span style="color:var(--brand-orange)">⚠️ ${j.discrepancias} sobrantes</span>` : ''}
+                </div>
+                <span class="badge ${j.estado === 'ok' ? 'badge-ok' : 'badge-alert'}">${j.estado === 'ok' ? 'Normal' : 'Revisar'}</span>
+                <button class="btn btn-ghost btn-sm" onclick="verDetalle('${j.id}')">Ver Detalle</button>
+            </div>
+        `).join('');
+    }
+
+    // ─── MODAL DETALLE ───
+    function verDetalle(id) {
+        const j = HISTORIAL.find(x => x.id == id);
+        if (!j) return;
+
+        document.getElementById('modal-fecha').textContent = formatFecha(j.fecha);
+
+        document.getElementById('modal-kpis').innerHTML = `
+            <div class="kpi"><div class="kpi-label">Insumos</div><div class="kpi-val" style="color:white">${j.items.length}</div></div>
+            <div class="kpi"><div class="kpi-label">Consumo Total</div><div class="kpi-val" style="color:var(--brand-yellow)">${j.totalConsumo}</div></div>
+            <div class="kpi"><div class="kpi-label">Más Consumido</div><div class="kpi-val" style="font-size:13px; color:white; margin-top:6px;">${j.masConsumido}</div></div>
+            <div class="kpi"><div class="kpi-label">Sobrantes</div><div class="kpi-val" style="color:${j.discrepancias > 0 ? 'var(--brand-orange)' : '#4CAF50'}">${j.discrepancias}</div></div>
+        `;
+
+        document.getElementById('modal-body').innerHTML = j.items.map(it => {
+            let estadoHtml = '<span class="diff-ok">Normal</span>';
+            if (it.cierre > it.apertura) estadoHtml = `<span class="diff-pos">+${it.cierre - it.apertura} sobrante</span>`;
+            else if (it.consumo > it.apertura * 0.8 && it.apertura > 0) estadoHtml = `<span class="diff-neg">⚠️ Alto</span>`;
+            return `
+                <div class="det-row">
+                    <div>
+                        <div style="font-weight:700; color:white;">${it.nombre}</div>
+                        <div style="font-size:10px; color:#444;">${it.unidad}</div>
+                    </div>
+                    <div class="ta-c" style="color:#888; font-weight:700;">${it.apertura}</div>
+                    <div class="ta-c" style="color:#888; font-weight:700;">${it.cierre}</div>
+                    <div class="ta-c" style="color:var(--brand-yellow); font-weight:900;">${it.consumo}</div>
+                    <div>${estadoHtml}</div>
+                </div>
+            `;
+        }).join('');
+
+        document.getElementById('modal-overlay').classList.add('open');
+    }
+
+    function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+    function closeModalOutside(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
+
+    // ─── MAESTRO INSUMOS ───
+    function renderMaster() {
+        const el = document.getElementById('master-list');
+        if (INSUMOS.length === 0) {
+            el.innerHTML = `<p style="color:#333; font-style:italic; text-align:center; padding:40px;">Catálogo vacío. Agrega insumos arriba.</p>`;
+            return;
+        }
+        el.innerHTML = `<p style="font-size:10px; color:#444; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px;">${INSUMOS.length} Insumos en Catálogo</p>` +
+            INSUMOS.map((ins, i) => `
+                <div class="insumo-item">
+                    <div style="flex:1;">
+                        <div style="font-weight:700; color:white;">${ins.nombre}</div>
+                        <div style="font-size:11px; color:#444;">Unidad: ${ins.unidad}</div>
+                    </div>
+                    <button class="btn btn-danger btn-sm" onclick="deleteInsumo(${i})">Eliminar</button>
+                </div>
+            `).join('');
+    }
+
+    function addInsumo() {
+        const nombre = document.getElementById('n-nombre').value.trim();
+        const unidad = document.getElementById('n-unidad').value;
+        if (!nombre) { alert('Escribe el nombre del insumo.'); return; }
+        INSUMOS.push({ id: Date.now(), nombre, unidad });
+        document.getElementById('n-nombre').value = '';
+        renderMaster();
+        showToast(`✓ "${nombre}" agregado al catálogo`);
+    }
+
+    function deleteInsumo(i) {
+        if (!confirm(`¿Quitar "${INSUMOS[i].nombre}" del catálogo?`)) return;
+        INSUMOS.splice(i, 1);
+        renderMaster();
+    }
+
+    // ─── TABS ───
+    function setTab(name, el) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('section-' + name).classList.add('active');
+        el.classList.add('active');
+        if (name === 'insumos') renderMaster();
+        if (name === 'historial') renderHistorial();
+        if (name === 'jornada') renderJornada();
+    }
+
+    // ─── TOAST ───
+    function showToast(msg, color='#4CAF50', bg='#1a3020') {
+        const t = document.createElement('div');
+        t.className = 'toast';
+        t.style.borderColor = color;
+        t.style.color = color;
+        t.style.background = bg;
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 2800);
+    }
+
+    // ─── INIT ───
+    renderJornada();
+</script>
+</body>
+</html>

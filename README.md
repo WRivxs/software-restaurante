@@ -1,16 +1,34 @@
-# React + Vite
+# software-restaurante
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Software para gestión financiera y seguimiento de pedidos para restaurante con servicio a domicilio y atención en mesa, menú digital a través de generación de código QR.
 
-Currently, two official plugins are available:
+## 🚀 Características
+- **Gestión de Pedidos en Tiempo Real:** Mesas, Domicilios y Para Llevar.
+- **Roles y Permisos:** Administrador, Cajero y Mesero.
+- **Facturación y Cierre de Caja:** Control de ingresos, egresos y cuadre diario.
+- **Impresión / Exportación:** Comanda de cocina y recibo en PDF.
+- **Tecnologías:** React, Vite, Tailwind CSS, Supabase, React Query, Zustand.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🛠️ Instalación y Configuración
 
-## React Compiler
+1. Clonar el repositorio:
+   ```bash
+   git clone https://github.com/WRivxs/software-restaurante.git
+   cd software-restaurante
+   ```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+2. Instalar dependencias:
+   ```bash
+   npm install
+   ```
 
-## Expanding the ESLint configuration
+3. Configurar variables de entorno:
+   Copiar `.env.example` a `.env` y configurar las credenciales de Supabase:
+   ```bash
+   cp .env.example .env
+   ```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+4. Iniciar en modo desarrollo:
+   ```bash
+   npm run dev
+   ```
